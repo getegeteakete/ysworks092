@@ -61,7 +61,7 @@ export async function checkInboundReplies() {
           const f = imap.fetch(uids, { bodies: '' })
           f.on('message', (msg) => {
             msg.on('body', (stream) => {
-              simpleParser(stream, (err, parsed) => {
+              simpleParser(stream as any, (err: any, parsed: any) => {
                 if (!err && parsed.text) {
                   results.push({
                     subject: parsed.subject || '',

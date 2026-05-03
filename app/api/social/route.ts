@@ -3,12 +3,15 @@ import { TwitterApi } from 'twitter-api-v2'
 import { generateTweet } from '@/lib/anthropic'
 import { supabaseAdmin } from '@/lib/supabase'
 
-const twitterClient = new TwitterApi({
-  appKey:        process.env.TWITTER_API_KEY!,
-  appSecret:     process.env.TWITTER_API_SECRET!,
-  accessToken:   process.env.TWITTER_ACCESS_TOKEN!,
-  accessSecret:  process.env.TWITTER_ACCESS_SECRET!,
-})
+// ビルド時初期化を避けるため関数内で生成
+function getTwitterClient() {
+  return new TwitterApi({
+    appKey:       process.env.TWITTER_API_KEY!,
+    appSecret:    process.env.TWITTER_API_SECRET!,
+    accessToken:  process.env.TWITTER_ACCESS_TOKEN!,
+    accessSecret: process.env.TWITTER_ACCESS_SECRET!,
+  })
+}
 
 export async function POST(req: NextRequest) {
   const { articleId, customText } = await req.json()
@@ -16,7 +19,6 @@ export async function POST(req: NextRequest) {
   let tweetText = customText
   let articleRef: any = null
 
-  // 記事IDが指定されていれば記事から自動生成
   if (articleId && !customText) {
     const { data: article } = await supabaseAdmin
       .from('articles')
@@ -36,6 +38,7 @@ export async function POST(req: NextRequest) {
   if (!tweetText) return NextResponse.json({ error: 'tweet content required' }, { status: 400 })
 
   try {
+    const twitterClient = getTwitterClient()
     const { data: tweet } = await twitterClient.v2.tweet(tweetText)
 
     await supabaseAdmin.from('social_posts').insert({
@@ -60,7 +63,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// 投稿履歴取得
 export async function GET() {
   const { data } = await supabaseAdmin
     .from('social_posts')

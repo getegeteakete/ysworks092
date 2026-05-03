@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     // キーワードの使用回数を更新
-    await supabaseAdmin.rpc('increment_keyword_count', { kw: keyword }).catch(() => {})
+    try { await supabaseAdmin.rpc('increment_keyword_count', { kw: keyword }) } catch {}
 
     return NextResponse.json({ ok: true, article: data })
   } catch (e: any) {
